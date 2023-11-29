@@ -12,8 +12,28 @@ namespace YourNamespace
 {
     [ApiController]
     [Route("[controller]")]
-    public class YourController : ControllerBase
+    public class DGController : ControllerBase
+    {[HttpGet("{sku}")]
+public async Task<IActionResult> GetProduct(string sku)
+{
+    string connectionString = "YourConnectionString";
+    await using SqlConnection connection = new(connectionString);
+    await connection.OpenAsync();
+
+    string query = "SELECT p.Name, p.EAN, p.Manufacturer, p.Category, p.ImageUrl, i.Stock, p.LogisticUnit, pr.NetPrice " +
+                   "FROM Products p " +
+                   "JOIN Inventory i ON p.Id = i.ProductId " +
+                   "JOIN Prices pr ON p.Id = pr.ProductId " +
+                   "WHERE p.SKU = @SKU";
+    var product = await connection.QueryFirstOrDefaultAsync<Product>(query, new { SKU = sku });
+
+    if (product == null)
     {
+        return NotFound();
+    }
+
+    return Ok(product);
+}
         [HttpGet]
         public async Task<IActionResult> Get()
         {
